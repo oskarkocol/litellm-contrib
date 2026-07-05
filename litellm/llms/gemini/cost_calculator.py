@@ -36,12 +36,12 @@ def cost_per_web_search_request(usage: "Usage", model_info: "ModelInfo") -> floa
       regardless of how many queries were executed internally.
 
     Reads the per-request cost from ``search_context_cost_per_query`` in
-    ``model_info`` when available, falling back to $0.035 for models not
+    ``model_info`` when available, falling back to $0.014 for models not
     yet updated in the pricing JSON.
     """
     from litellm.types.utils import PromptTokensDetailsWrapper
 
-    _DEFAULT_COST = 35e-3
+    _DEFAULT_COST = 14e-3
     search_costs = model_info.get("search_context_cost_per_query") or {}
     _cost = search_costs.get("search_context_size_medium", _DEFAULT_COST)
 
