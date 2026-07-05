@@ -20318,13 +20318,13 @@
     },
     "gpt-3.5-turbo-1106": {
         "deprecation_date": "2026-09-28",
-        "input_cost_per_token": 1e-06,
+        "input_cost_per_token": 5e-7,
         "litellm_provider": "openai",
         "max_input_tokens": 16385,
         "max_output_tokens": 4096,
         "max_tokens": 4096,
         "mode": "chat",
-        "output_cost_per_token": 2e-06,
+        "output_cost_per_token": 1.5e-6,
         "supports_function_calling": true,
         "supports_parallel_function_calling": true,
         "supports_prompt_caching": true,
@@ -22396,7 +22396,7 @@
         "supports_vision": true
     },
     "gpt-5.4-pro": {
-        "cache_read_input_token_cost": 3e-06,
+        "cache_read_input_token_cost": 0.0,
         "cache_read_input_token_cost_above_272k_tokens": 6e-06,
         "input_cost_per_token": 3e-05,
         "input_cost_per_token_above_272k_tokens": 6e-05,
