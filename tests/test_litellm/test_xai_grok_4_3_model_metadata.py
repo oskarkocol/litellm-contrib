@@ -20,9 +20,9 @@ def test_xai_grok_4_3_model_info(model):
     assert info["litellm_provider"] == "xai"
     assert info["mode"] == "chat"
 
-    assert info["input_cost_per_token"] == 1.25e-06
-    assert info["output_cost_per_token"] == 2.5e-06
-    assert info["cache_read_input_token_cost"] == 2e-07
+    assert info["input_cost_per_token"] == 2.5e-06
+    assert info["output_cost_per_token"] == 5e-06
+    assert info["cache_read_input_token_cost"] == 4e-07
 
     assert info["input_cost_per_token_above_200k_tokens"] == 2.5e-06
     assert info["output_cost_per_token_above_200k_tokens"] == 5e-06
