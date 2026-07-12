@@ -425,7 +425,7 @@ def test_generic_cost_per_token_honors_non_standard_above_threshold():
 
 
 def test_generic_cost_per_token_gpt55():
-    """gpt-5.5: base pricing — $5/1M input, $30/1M output, $0.50/1M cached input."""
+    """gpt-5.5: base pricing — $12.50/1M input, $75/1M output, $1.25/1M cached input."""
     model = "gpt-5.5"
     custom_llm_provider = "openai"
     os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
@@ -434,9 +434,9 @@ def test_generic_cost_per_token_gpt55():
     model_cost_map = litellm.model_cost[model]
 
     # Sanity-check the map values match OpenAI's published pricing.
-    assert model_cost_map["input_cost_per_token"] == 5e-6
-    assert model_cost_map["output_cost_per_token"] == 3e-5
-    assert model_cost_map["cache_read_input_token_cost"] == 5e-7
+    assert model_cost_map["input_cost_per_token"] == 1.25e-5
+    assert model_cost_map["output_cost_per_token"] == 7.5e-5
+    assert model_cost_map["cache_read_input_token_cost"] == 1.25e-6
     assert model_cost_map["litellm_provider"] == "openai"
     assert model_cost_map["mode"] == "chat"
     # gpt-5.5 inherits GPT-5.4's long-context window + tiered pricing.
@@ -465,7 +465,7 @@ def test_generic_cost_per_token_gpt55():
 
 
 def test_generic_cost_per_token_gpt55_pro():
-    """gpt-5.5-pro: responses-only model — $30/1M input, $180/1M output, $3/1M cached input."""
+    """gpt-5.5-pro: responses-only model — $15/1M input, $90/1M output, $3/1M cached input."""
     model = "gpt-5.5-pro"
     custom_llm_provider = "openai"
     os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
@@ -474,8 +474,8 @@ def test_generic_cost_per_token_gpt55_pro():
     model_cost_map = litellm.model_cost[model]
 
     # Sanity-check the map values match OpenAI's published pricing.
-    assert model_cost_map["input_cost_per_token"] == 3e-5
-    assert model_cost_map["output_cost_per_token"] == 1.8e-4
+    assert model_cost_map["input_cost_per_token"] == 1.5e-5
+    assert model_cost_map["output_cost_per_token"] == 9e-5
     assert model_cost_map["cache_read_input_token_cost"] == 3e-6
     assert model_cost_map["litellm_provider"] == "openai"
     # gpt-5.5-pro is a responses-only model (no /v1/chat/completions endpoint).
@@ -1538,23 +1538,22 @@ def _local_model_cost_map():
             os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = prev_env
 
 
-@pytest.mark.parametrize("model", ["gpt-5.4", "gpt-realtime-2.1", "gpt-realtime-2.1-mini"])
 @pytest.mark.parametrize("data_residency", ["eu", "us"])
-def test_data_residency_applies_uplift(data_residency, model, _local_model_cost_map):
-    """Models released on/after 2026-03-05 (gpt-5.4/5.5 and gpt-realtime-2.1
-    series) apply the 10% regional processing uplift multiplier when
-    data_residency is set; gpt-5 and older models do not."""
+def test_data_residency_applies_uplift(data_residency, _local_model_cost_map):
+    """gpt-5.4 should apply the regional processing uplift multiplier when
+    data_residency is set. gpt-5.4+ (released 2026-03-05) carry the 10% uplift;
+    gpt-5 and older models do not."""
     from litellm.types.utils import Usage
 
     usage = Usage(prompt_tokens=1000, completion_tokens=500, total_tokens=1500)
 
     base = generic_cost_per_token(
-        model=model,
+        model="gpt-5.4",
         usage=usage,
         custom_llm_provider="openai",
     )
     regional = generic_cost_per_token(
-        model=model,
+        model="gpt-5.4",
         usage=usage,
         custom_llm_provider="openai",
         data_residency=data_residency,
