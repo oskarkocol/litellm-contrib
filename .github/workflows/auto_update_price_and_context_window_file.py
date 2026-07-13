@@ -142,6 +142,32 @@ def transform_novita_data(data):
 
     return transformed
 
+# Update the existing models and add the missing models for Cerebras (via Narev)
+def transform_cerebras_data(data):
+    transformed = {}
+    for row in data:
+        if not row.get("pricing"):
+            continue
+
+        pricing = row["pricing"]
+        obj = {
+            "input_cost_per_token": float(pricing["prompt"]),
+            "output_cost_per_token": float(pricing["completion"]),
+            "litellm_provider": "cerebras",
+            "mode": "chat",
+        }
+
+        if "input_cache_read" in pricing and pricing["input_cache_read"] is not None and float(pricing["input_cache_read"]) != 0.0:
+            obj["cache_read_input_token_cost"] = float(pricing["input_cache_read"])
+            obj["supports_prompt_caching"] = True
+
+        if "input_cache_write" in pricing and pricing["input_cache_write"] is not None and float(pricing["input_cache_write"]) != 0.0:
+            obj["cache_creation_input_token_cost"] = float(f"{float(pricing['input_cache_write']):e}")
+
+        transformed[f"cerebras/{row['model_id']}"] = obj
+
+    return transformed
+
 
 # Load local data from a specified file
 def load_local_data(file_path):
@@ -180,11 +206,13 @@ def main():
 
     # Fetch Novita data
     novita_data = asyncio.run(fetch_data(novita_url))
-    # Transform the fetched Novita data
     novita_data = transform_novita_data(novita_data)
 
-    # Combine both datasets
-    all_remote_data = {**openrouter_data, **vercel_data, **novita_data}
+    cerebras_url = "https://api.narev.ai/v1/prices?provider_id=cerebras"
+    cerebras_data = asyncio.run(fetch_data(cerebras_url))
+    cerebras_data = transform_cerebras_data(cerebras_data or [])
+
+    all_remote_data = {**openrouter_data, **vercel_data, **novita_data, **cerebras_data}
 
     # If both local and openrouter data are available, synchronize and save
     if local_data and all_remote_data:
