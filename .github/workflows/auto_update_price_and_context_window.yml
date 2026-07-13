@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "0 0 * * 0" # Run every Sundays at midnight
     #- cron: "0 0 * * *" # Run daily at midnight
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,7 +12,7 @@ permissions:
 
 jobs:
   auto_update_price_and_context_window:
-    if: github.repository == 'BerriAI/litellm'
+    # if: github.repository == 'BerriAI/litellm'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -25,12 +26,18 @@ jobs:
         run: |
           uv run --frozen --with 'aiohttp==3.13.3' python ".github/workflows/auto_update_price_and_context_window_file.py"
       - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git add model_prices_and_context_window.json 
-          git commit -m "Update model_prices_and_context_window.json file: $(date +'%Y-%m-%d')" 
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH_NAME="auto-update-price-and-context-window-$(date +'%Y-%m-%d')"
+          git checkout -b "${BRANCH_NAME}"
+          git add model_prices_and_context_window.json
+          git commit -m "Update model_prices_and_context_window.json file: $(date +'%Y-%m-%d')"
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "${BRANCH_NAME}"
           gh pr create --title "Update model_prices_and_context_window.json file" \
             --body "Automated update for model_prices_and_context_window.json" \
-            --head auto-update-price-and-context-window-$(date +'%Y-%m-%d') \
+            --head "${BRANCH_NAME}" \
             --base main
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
