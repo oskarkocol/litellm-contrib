@@ -116,6 +116,32 @@ def transform_vercel_ai_gateway_data(data):
 
     return transformed
 
+# Update the existing models and add the missing models for Novita
+def transform_novita_data(data):
+    transformed = {}
+    for row in data:
+        obj = {}
+
+        if "context_size" in row:
+            obj["max_tokens"] = row["context_size"]
+            obj["max_input_tokens"] = row["context_size"]
+
+        if "max_output_tokens" in row:
+            obj["max_output_tokens"] = row["max_output_tokens"]
+
+        if row.get("input_token_price_per_m") is not None:
+            obj["input_cost_per_token"] = row["input_token_price_per_m"] / 10_000_000_000
+
+        if row.get("output_token_price_per_m") is not None:
+            obj["output_cost_per_token"] = row["output_token_price_per_m"] / 10_000_000_000
+
+        mode = "embedding" if row.get("model_type") == "embedding" else "chat"
+        obj.update({"litellm_provider": "novita", "mode": mode})
+
+        transformed[f'novita/{row["id"]}'] = obj
+
+    return transformed
+
 
 # Load local data from a specified file
 def load_local_data(file_path):
@@ -137,6 +163,7 @@ def main():
     local_file_path = "model_prices_and_context_window.json"  # Path to the local data file
     openrouter_url = "https://openrouter.ai/api/v1/models"  # URL to fetch OpenRouter data
     vercel_ai_gateway_url = "https://ai-gateway.vercel.sh/v1/models"  # URL to fetch Vercel AI Gateway data
+    novita_url = "https://api.novita.ai/openai/v1/models"  # URL to fetch Novita data
 
     # Load local data from file
     local_data = load_local_data(local_file_path)
@@ -151,8 +178,13 @@ def main():
     # Transform the fetched Vercel AI Gateway data
     vercel_data = transform_vercel_ai_gateway_data(vercel_data)
 
+    # Fetch Novita data
+    novita_data = asyncio.run(fetch_data(novita_url))
+    # Transform the fetched Novita data
+    novita_data = transform_novita_data(novita_data)
+
     # Combine both datasets
-    all_remote_data = {**openrouter_data, **vercel_data}
+    all_remote_data = {**openrouter_data, **vercel_data, **novita_data}
 
     # If both local and openrouter data are available, synchronize and save
     if local_data and all_remote_data:
