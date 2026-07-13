@@ -29966,14 +29966,14 @@
         "supports_tool_choice": true
     },
     "openrouter/deepseek/deepseek-chat-v3.1": {
-        "input_cost_per_token": 2.1e-07,
+        "input_cost_per_token": 2.5e-07,
         "input_cost_per_token_cache_hit": 2e-08,
         "litellm_provider": "openrouter",
         "max_input_tokens": 163840,
         "max_output_tokens": 32768,
         "max_tokens": 163840,
         "mode": "chat",
-        "output_cost_per_token": 7.9e-07,
+        "output_cost_per_token": 9.5e-07,
         "supports_assistant_prefill": true,
         "supports_function_calling": true,
         "supports_prompt_caching": true,
